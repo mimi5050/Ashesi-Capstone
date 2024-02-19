@@ -60,19 +60,19 @@ root.title("Text-to-Speech Application")
 
 # Create and pack GUI elements
 text_entry = tk.Text(root, wrap="word", width=40, height=5)
-text_entry.pack(pady=10)
+text_entry.pack(pady=10, fill="both", expand=True)
+text_entry.pack_propagate(False) 
 
-upload_button = ttk.Button(root, text="Upload Document", command=upload_document)
+upload_button = ttk.Button(root, text="Upload Document", width=20, command=upload_document)
 upload_button.pack()
 
-play_button = ttk.Button(root, text="Play Audio", command=text_to_speech)
+play_button = ttk.Button(root, text="Play Audio", width=20, command=text_to_speech)
 play_button.pack()
 
-restart_button = ttk.Button(root, text="Restart Interface", command=restart_interface)
+restart_button = ttk.Button(root, text="Restart Interface", width=20, command=restart_interface)
 restart_button.pack()
 
 status_label = ttk.Label(root, text="", foreground="black")
 status_label.pack(pady=10)
-
 # Run the main loop
 root.mainloop()

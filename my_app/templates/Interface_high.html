@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech to Text Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #279092;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .menu {
+            width: 100%;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .menu a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #279092;
+            font-weight: bold;
+        }
+
+        .menu a:hover {
+            color: #64a4e9;
+        }
+
+        .welcome-container {
+            text-align: center;
+            color: #fff;
+            margin-top: 5px;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #upload-container {
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #279092;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #64a4e9;
+        }
+
+        textarea {
+            width: 95%;
+            height: 300px;
+            resize: none;
+            padding: 10px;
+            margin-top: 2%;
+            margin-left: 2%;
+            margin-right: 2%;
+        }
+
+        #error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        progress {
+            width: 100%;
+            height: 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+        }
+
+        #progressText {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .transcription-container {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .download-btn {
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+            display: inline-block;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .download-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <a href="/">HIGH-ACCURACY</a>
+        <a href="/interface_medium">MEDIUM-ACCURACY</a>
+        <a href="/interface_baseline">BASELINE-ACCURACY</a>
+    </div>
+
+    <div class="welcome-container">
+        <div class="welcome-message">
+            <p>Hey there!
+                <br><br> Welcome to our speech-to-text interface. Record your audio below and get your transcription instantly!
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Speech to Text</h1>
+        <div id="upload-container">
+            <button onclick="beginRecording()">Begin Recording</button>
+            <button onclick="startRecording()" class="hidden">Record Audio</button>
+            <button onclick="stopRecording()" class="hidden">Stop Recording</button>
+        </div>
+        <div id="progress" class="hidden">
+            <div class="progress-container">
+                <progress id="uploadProgress" max="100" value="0"></progress>
+                <p id="progressText">Uploading...</p>
+            </div>
+        </div>
+        <div id="transcription" class="hidden">
+            <div class="transcription-container">
+                <h2>Transcription:</h2>
+                <textarea id="transcriptionText"></textarea>
+                <a id="downloadLink" class="download-btn hidden" download="transcription.txt">Download Transcription</a>
+            </div>
+        </div>
+        <div id="error" class="hidden"></div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+        let audioURL;
+
+        function beginRecording() {
+            document.getElementById('transcription').classList.remove('hidden');
+            document.querySelector('button[onclick="beginRecording()"]').classList.add('hidden');
+            document.querySelector('button[onclick="startRecording()"]').classList.remove('hidden');
+            document.querySelector('button[onclick="stopRecording()"]').classList.remove('hidden');
+        }
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(stream) {
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+                    mediaRecorder.start();
+                    document.getElementById('progress').classList.remove('hidden');
+                    document.getElementById('progressText').innerText = 'Recording...';
+
+                    mediaRecorder.ondataavailable = function(e) {
+                        recordedChunks.push(e.data);
+                    };
+
+                    mediaRecorder.onstop = function() {
+                        const blob = new Blob(recordedChunks, { type: 'audio/webm;codecs=opus' });
+                        audioURL = URL.createObjectURL(blob);
+
+                        const audioContainer = document.getElementById('upload-container');
+                        let existingAudio = audioContainer.querySelector('audio');
+                        if (existingAudio) {
+                            audioContainer.removeChild(existingAudio);
+                        }
+
+                        const audio = new Audio();
+                        audio.src = audioURL;
+                        audio.controls = true;
+                        audioContainer.appendChild(audio);
+
+                        document.getElementById('transcription').classList.remove('hidden');
+                        document.getElementById('downloadLink').classList.remove('hidden');
+
+                        uploadAudio(blob);
+
+                        // Clear recordedChunks for next recording
+                        recordedChunks = [];
+                    };
+
+                    document.getElementById('upload-container').classList.add('recording');
+                })
+                .catch(function(err) {
+                    console.error('Error recording audio: ' + err);
+                    document.getElementById('error').innerText = 'Error recording audio: ' + err.message;
+                    document.getElementById('error').classList.remove('hidden');
+                });
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            document.getElementById('progressText').innerText = 'Uploading...';
+            document.getElementById('upload-container').classList.remove('recording');
+        }
+
+        function uploadAudio(blob) {
+            const formData = new FormData();
+            formData.append('file', blob, 'recording_high.webm');
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/transcribe_high', true);
+
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    document.getElementById('uploadProgress').value = percentComplete;
+                    document.getElementById('progressText').innerText = `Uploading... ${Math.round(percentComplete)}%`;
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    // Get the current transcription text
+                    let currentTranscription = document.getElementById('transcriptionText').value;
+                    // Append the new transcription to the current text with a separator
+                    currentTranscription += (currentTranscription.length > 0 ? '\n\n' : '') + response.transcription;
+                    // Set the transcription textarea to display all transcriptions
+                    document.getElementById('transcriptionText').value = currentTranscription;
+                    // Update the download link to download all transcriptions
+                    document.getElementById('downloadLink').href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(currentTranscription);
+
+                    document.getElementById('progress').classList.add('hidden');
+                } else {
+                    const response = JSON.parse(xhr.responseText);
+                    document.getElementById('error').innerText = 'Error: ' + response.error;
+                    document.getElementById('error').classList.remove('hidden');
+                    document.getElementById('progress').classList.add('hidden');
+                }
+            };
+
+            xhr.send(formData);
+        }
+    </script>
+</body>
+</html>

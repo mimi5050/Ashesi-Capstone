@@ -1,5 +1,5 @@
 
-**Research:** Investigating the Impact of Accuracy on the Usability of Speech-to-Text Systems for Dyslexic Students in Ghana
+
 
 **Overview**
 

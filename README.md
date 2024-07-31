@@ -11,7 +11,7 @@ model_high/: Directory containing trained high-accuracy model
 
 model_medium/: Directory containing trained medium-accuracy model 
 
-model_baseline/: Directory containing trained high-accuracy model 
+model_baseline/: Directory containing trained baseline-accuracy model 
 
 my_app/: Deployment scripts for the STT models.
 
